@@ -152,3 +152,15 @@ curl -i -X GET http://localhost:8001/services
 
 This project is open-source and available under the [MIT License](LICENSE).
 
+## Contributing
+
+Feel free to contribute to this project and create a pull request with your changes.
+
+## Support
+
+For support or questions, please create an issue in this repository.
+
+## Author
+
+[Sunil Kumar Samanta](https://github.com/sunilksamanta)
+
