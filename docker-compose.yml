@@ -1,6 +1,7 @@
 services:
   kong:
-    image: kong:2.5
+    container_name: api-gateway
+    image: kong:3.4
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
@@ -9,6 +10,8 @@ services:
       KONG_PROXY_ERROR_LOG: /dev/stderr
       KONG_ADMIN_ERROR_LOG: /dev/stderr
       KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_NGINX_HTTP_CLIENT_HEADER_BUFFER_SIZE: "16k"
+      KONG_NGINX_HTTP_LARGE_CLIENT_HEADER_BUFFERS: "8 32k"
     volumes:
       - ./gateway/kong.yml:/etc/kong/kong.yml
     ports:
@@ -18,8 +21,18 @@ services:
       - "8444:8444"
     networks:
       - kong-network
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   product:
+    container_name: product-service
     build:
       context: ./services/product
     ports:
@@ -27,11 +40,24 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
+      - SERVICE_ID=product-service
       - MONGO_URI=mongodb://host.docker.internal:27017/product
     networks:
       - kong-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - kong
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   order:
+    container_name: order-service
     build:
       context: ./services/order
     ports:
@@ -39,9 +65,21 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
+      - SERVICE_ID=order-service
       - MONGO_URI=mongodb://host.docker.internal:27017/order
     networks:
       - kong-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - kong
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
 networks:
   kong-network:

@@ -15,8 +15,9 @@ services:
       - name: order-route
         paths:
           - /orders
-#    plugins:
-#      - name: jwt
+        strip_path: true
+    # plugins:
+    #   - name: jwt
 
 consumers:
   - username: sunil
