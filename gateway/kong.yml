@@ -1,27 +1,33 @@
 _format_version: "2.1"
+plugins:
+  - name: oidc
+    enabled: false
+    config:
+      client_id: kong
+      client_secret: your-client-secret
+      discovery: http://keycloak:8080/realms/myrealm/.well-known/openid-configuration
+      bearer_only: "yes"
+      
 services:
   - name: product-service
-    url: http://product:3000
+    url: http://product-service:3000
     routes:
       - name: product-route
         paths:
           - /products
-    plugins:
-      - name: jwt
-
+  
   - name: order-service
-    url: http://order:3000
+    url: http://order-service:3000
     routes:
       - name: order-route
         paths:
           - /orders
         strip_path: true
-    # plugins:
-    #   - name: jwt
-
-consumers:
-  - username: sunil
-    jwt_secrets:
-      - key: "123456"
-        secret: "your_secret"
-        algorithm: HS256
+  
+  - name: auth-service
+    url: http://keycloak:8080
+    routes:
+      - name: auth-route
+        paths:
+          - /auth
+        strip_path: true
